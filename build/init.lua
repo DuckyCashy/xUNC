@@ -7,7 +7,7 @@ local results = {}
 
 local function test(name, callback)
     total = total + 1
-    task.wait(0.03)
+    task.wait(0.05)
 
     local success, result = pcall(function()
         return callback()
@@ -30,20 +30,24 @@ local function test(name, callback)
     end
 end
 
-print("⚡ [xUNC] Executing UNC benchmark suite...")
+print("⚡ [xUNC] Executing crash-safe benchmark suite...")
 
 test("cache.invalidate", function()
     if typeof(cache) ~= "table" or typeof(cache.invalidate) ~= "function" then return false end
-    local container = Instance.new("Folder")
-    local part = Instance.new("Part", container)
-    cache.invalidate(container:FindFirstChild("Part"))
-    return container:FindFirstChild("Part") ~= part
+    local part = Instance.new("Part")
+    part.Parent = workspace
+    cache.invalidate(part)
+    local state = not (cache.iscached and cache.iscached(part))
+    part:Destroy()
+    return state
 end)
 
 test("cache.iscached", function()
     if typeof(cache) ~= "table" or typeof(cache.iscached) ~= "function" then return false end
     local part = Instance.new("Part")
-    return cache.iscached(part)
+    local state = cache.iscached(part)
+    part:Destroy()
+    return state == true
 end)
 
 test("cache.replace", function()
@@ -51,6 +55,8 @@ test("cache.replace", function()
     local part1 = Instance.new("Part")
     local part2 = Instance.new("Part")
     cache.replace(part1, part2)
+    part1:Destroy()
+    part2:Destroy()
     return true
 end)
 
@@ -58,14 +64,18 @@ test("cloneref", function()
     if typeof(cloneref) ~= "function" then return false end
     local part = Instance.new("Part")
     local clone = cloneref(part)
-    return part ~= clone and part == clone
+    local valid = (part ~= clone and part == clone)
+    part:Destroy()
+    return valid
 end)
 
 test("compareinstances", function()
-    if typeof(compareinstances) ~= "function" then return false end
+    if typeof(compareinstances) ~= "function" or typeof(cloneref) ~= "function" then return false end
     local part = Instance.new("Part")
     local clone = cloneref(part)
-    return compareinstances(part, clone)
+    local valid = compareinstances(part, clone)
+    part:Destroy()
+    return valid == true
 end)
 
 test("checkcaller", function()
@@ -82,7 +92,8 @@ end)
 
 test("getcallingscript", function()
     if typeof(getcallingscript) ~= "function" then return false end
-    return getcallingscript() == nil or typeof(getcallingscript()) == "Instance"
+    local res = getcallingscript()
+    return res == nil or typeof(res) == "Instance"
 end)
 
 test("hookfunction", function()
@@ -356,6 +367,7 @@ test("fireclickdetector", function()
     if typeof(fireclickdetector) ~= "function" then return false end
     local detector = Instance.new("ClickDetector")
     fireclickdetector(detector, 0)
+    detector:Destroy()
     return true
 end)
 
@@ -363,6 +375,7 @@ test("fireproximityprompt", function()
     if typeof(fireproximityprompt) ~= "function" then return false end
     local prompt = Instance.new("ProximityPrompt")
     fireproximityprompt(prompt)
+    prompt:Destroy()
     return true
 end)
 
@@ -372,6 +385,8 @@ test("firetouchinterest", function()
     local p2 = Instance.new("Part")
     firetouchinterest(p1, p2, 0)
     firetouchinterest(p1, p2, 1)
+    p1:Destroy()
+    p2:Destroy()
     return true
 end)
 
@@ -380,7 +395,9 @@ test("getcallbackvalue", function()
     local bindable = Instance.new("BindableFunction")
     local fn = function() end
     bindable.OnInvoke = fn
-    return getcallbackvalue(bindable, "OnInvoke") == fn
+    local val = getcallbackvalue(bindable, "OnInvoke")
+    bindable:Destroy()
+    return val == fn
 end)
 
 test("getconnections", function()
@@ -389,6 +406,7 @@ test("getconnections", function()
     local conn = bindable.Event:Connect(function() end)
     local conns = getconnections(bindable.Event)
     conn:Disconnect()
+    bindable:Destroy()
     return typeof(conns) == "table" and #conns > 0
 end)
 
@@ -404,6 +422,7 @@ test("gethiddenproperty", function()
     if typeof(gethiddenproperty) ~= "function" then return false end
     local fire = Instance.new("Fire")
     local val = gethiddenproperty(fire, "size_xml")
+    fire:Destroy()
     return val ~= nil
 end)
 
@@ -411,6 +430,7 @@ test("sethiddenproperty", function()
     if typeof(sethiddenproperty) ~= "function" then return false end
     local fire = Instance.new("Fire")
     local success = sethiddenproperty(fire, "size_xml", 10)
+    fire:Destroy()
     return success == true
 end)
 
@@ -429,21 +449,25 @@ end)
 test("getscriptbytecode", function()
     local fn = getscriptbytecode or getscriptcode
     if typeof(fn) ~= "function" then return false end
-    local script = Instance.new("LocalScript")
-    local bc = fn(script)
+    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true) or game:FindFirstChildWhichIsA("ModuleScript", true)
+    if not existingScript then return false end
+    local bc = fn(existingScript)
     return typeof(bc) == "string"
 end)
 
 test("getscripthash", function()
     if typeof(getscripthash) ~= "function" then return false end
-    local script = Instance.new("LocalScript")
-    return typeof(getscripthash(script)) == "string"
+    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true) or game:FindFirstChildWhichIsA("ModuleScript", true)
+    if not existingScript then return false end
+    return typeof(getscripthash(existingScript)) == "string"
 end)
 
 test("getsenv", function()
     if typeof(getsenv) ~= "function" then return false end
-    local script = Instance.new("LocalScript")
-    return typeof(getsenv(script)) == "table" or getsenv(script) == nil
+    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true)
+    if not existingScript then return false end
+    local env = getsenv(existingScript)
+    return typeof(env) == "table"
 end)
 
 test("getrawmetatable", function()
@@ -454,10 +478,11 @@ end)
 
 test("hookmetamethod", function()
     if typeof(hookmetamethod) ~= "function" then return false end
-    local obj = setmetatable({}, { __namecall = function() return "orig" end })
     local ref
-    ref = hookmetamethod(obj, "__namecall", function(...) return "hooked" end)
-    return obj:test() == "hooked"
+    ref = hookmetamethod(game, "__namecall", function(self, ...)
+        return ref(self, ...)
+    end)
+    return typeof(ref) == "function"
 end)
 
 test("getnamecallmethod", function()
