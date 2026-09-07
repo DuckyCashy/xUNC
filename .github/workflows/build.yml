@@ -1,0 +1,18 @@
+name: Build xUNC Distribution Bundle
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Distribution Files
+        run: |
+          test -f build/init.lua && echo "ℹ️ build/init.lua verified!" || exit 1
+          
