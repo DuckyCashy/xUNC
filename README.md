@@ -13,12 +13,12 @@ xUNC is an anti-spoof behavioral environment testing suite for Roblox script exe
 
 **Xeno 1.3.60**
 <p align="center">
-  <img src="images/Xeno" alt="Xeno's xUNC Score" width="100%" />
+  <img src="images/Xeno.png" alt="Xeno's xUNC Score" width="100%" />
 </p>
 
 **Solara 3.0**
 <p align="center">
-  <img src="images/Solara" alt="Solara's xUNC Score" width="100%" />
+  <img src="images/Solara.png" alt="Solara's xUNC Score" width="100%" />
 </p>
 
 ---
