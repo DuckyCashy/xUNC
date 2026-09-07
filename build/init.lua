@@ -28,6 +28,17 @@ local function test(name, callback)
     end
 end
 
+local function getExecutor()
+    local fn = identifyexecutor or getexecutorname
+    if typeof(fn) == "function" then
+        local name, ver = fn()
+        if name then
+            return ver and (name .. " " .. ver) or name
+        end
+    end
+    return "Unknown Executor"
+end
+
 print("⚡ [xUNC] Executing soft benchmark suite...")
 
 test("cache.invalidate", function()
@@ -474,4 +485,5 @@ local percentage = math.floor((passes / total) * 100)
 print("---------------------------------------------------------------")
 print(string.format("📊 Final Score: %d%% (%d/%d Functions Verified)", percentage, passes, total))
 print(string.format("Passed: %d | Failed: %d | Unknown: %d", passes, fails, undefined))
+print(string.format("💻 Executor: %s", getExecutor()))
 print("===============================================================\n")
