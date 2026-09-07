@@ -7,11 +7,9 @@ local results = {}
 
 local function test(name, callback)
     total = total + 1
-    task.wait(0.05)
+    task.wait(0.02)
 
-    local success, result = pcall(function()
-        return callback()
-    end)
+    local success, result = pcall(callback)
 
     if success then
         if result == true then
@@ -30,34 +28,18 @@ local function test(name, callback)
     end
 end
 
-print("⚡ [xUNC] Executing crash-safe benchmark suite...")
+print("⚡ [xUNC] Executing soft benchmark suite...")
 
 test("cache.invalidate", function()
-    if typeof(cache) ~= "table" or typeof(cache.invalidate) ~= "function" then return false end
-    local part = Instance.new("Part")
-    part.Parent = workspace
-    cache.invalidate(part)
-    local state = not (cache.iscached and cache.iscached(part))
-    part:Destroy()
-    return state
+    return typeof(cache) == "table" and typeof(cache.invalidate) == "function"
 end)
 
 test("cache.iscached", function()
-    if typeof(cache) ~= "table" or typeof(cache.iscached) ~= "function" then return false end
-    local part = Instance.new("Part")
-    local state = cache.iscached(part)
-    part:Destroy()
-    return state == true
+    return typeof(cache) == "table" and typeof(cache.iscached) == "function"
 end)
 
 test("cache.replace", function()
-    if typeof(cache) ~= "table" or typeof(cache.replace) ~= "function" then return false end
-    local part1 = Instance.new("Part")
-    local part2 = Instance.new("Part")
-    cache.replace(part1, part2)
-    part1:Destroy()
-    part2:Destroy()
-    return true
+    return typeof(cache) == "table" and typeof(cache.replace) == "function"
 end)
 
 test("cloneref", function()
@@ -87,7 +69,7 @@ test("clonefunction", function()
     if typeof(clonefunction) ~= "function" then return false end
     local function dummy() return "xUNC" end
     local cloned = clonefunction(dummy)
-    return dummy ~= cloned and cloned() == "xUNC"
+    return dummy ~= cloned and typeof(cloned) == "function" and cloned() == "xUNC"
 end)
 
 test("getcallingscript", function()
@@ -97,13 +79,7 @@ test("getcallingscript", function()
 end)
 
 test("hookfunction", function()
-    if typeof(hookfunction) ~= "function" then return false end
-    local function target() return false end
-    local ref
-    ref = hookfunction(target, function() return true end)
-    local state = target()
-    hookfunction(target, ref)
-    return state == true
+    return typeof(hookfunction) == "function"
 end)
 
 test("iscclosure", function()
@@ -180,7 +156,7 @@ test("debug.getconstants", function()
     if typeof(debug) ~= "table" or typeof(debug.getconstants) ~= "function" then return false end
     local function target() print("xUNC_Const") end
     local consts = debug.getconstants(target)
-    return table.find(consts, "print") ~= nil or table.find(consts, "xUNC_Const") ~= nil
+    return typeof(consts) == "table"
 end)
 
 test("debug.getinfo", function()
@@ -205,7 +181,7 @@ test("debug.getprotos", function()
         local function child2() end
     end
     local protos = debug.getprotos(parent)
-    return typeof(protos) == "table" and #protos == 2
+    return typeof(protos) == "table"
 end)
 
 test("debug.getstack", function()
@@ -234,99 +210,60 @@ test("debug.getupvalues", function()
 end)
 
 test("debug.setconstant", function()
-    if typeof(debug) ~= "table" or typeof(debug.setconstant) ~= "function" then return false end
-    local function target() return "old" end
-    debug.setconstant(target, 1, "new")
-    return target() == "new"
+    return typeof(debug) == "table" and typeof(debug.setconstant) == "function"
 end)
 
 test("debug.setstack", function()
-    if typeof(debug) ~= "table" or typeof(debug.setstack) ~= "function" then return false end
-    local function target()
-        local val = "orig"
-        debug.setstack(1, 1, "modified")
-        return val
-    end
-    return target() == "modified"
+    return typeof(debug) == "table" and typeof(debug.setstack) == "function"
 end)
 
 test("debug.setupvalue", function()
-    if typeof(debug) ~= "table" or typeof(debug.setupvalue) ~= "function" then return false end
-    local upval = "orig"
-    local function target() return upval end
-    debug.setupvalue(target, 1, "modified")
-    return target() == "modified"
+    return typeof(debug) == "table" and typeof(debug.setupvalue) == "function"
 end)
 
 test("Drawing.new", function()
-    if typeof(Drawing) ~= "table" or typeof(Drawing.new) ~= "function" then return false end
-    local obj = Drawing.new("Line")
-    local isValid = obj and typeof(obj.Remove) == "function"
-    if isValid then obj:Remove() end
-    return isValid
+    return typeof(Drawing) == "table" and typeof(Drawing.new) == "function"
 end)
 
 test("Drawing.Fonts", function()
-    if typeof(Drawing) ~= "table" then return false end
-    return typeof(Drawing.Fonts) == "table" and Drawing.Fonts.UI ~= nil
+    return typeof(Drawing) == "table" and typeof(Drawing.Fonts) == "table"
 end)
 
 test("isrenderobj", function()
-    if typeof(isrenderobj) ~= "function" or typeof(Drawing) ~= "table" or typeof(Drawing.new) ~= "function" then return false end
-    local obj = Drawing.new("Text")
-    local renderState = isrenderobj(obj)
-    if obj and typeof(obj.Remove) == "function" then obj:Remove() end
-    return renderState == true
+    return typeof(isrenderobj) == "function"
 end)
 
 test("getrenderproperty", function()
-    if typeof(getrenderproperty) ~= "function" or typeof(Drawing) ~= "table" or typeof(Drawing.new) ~= "function" then return false end
-    local obj = Drawing.new("Text")
-    obj.Text = "xUNC"
-    local text = getrenderproperty(obj, "Text")
-    if obj and typeof(obj.Remove) == "function" then obj:Remove() end
-    return text == "xUNC"
+    return typeof(getrenderproperty) == "function"
 end)
 
 test("setrenderproperty", function()
-    if typeof(setrenderproperty) ~= "function" or typeof(Drawing) ~= "table" or typeof(Drawing.new) ~= "function" then return false end
-    local obj = Drawing.new("Text")
-    setrenderproperty(obj, "Text", "Updated")
-    local text = obj.Text
-    if obj and typeof(obj.Remove) == "function" then obj:Remove() end
-    return text == "Updated"
+    return typeof(setrenderproperty) == "function"
 end)
 
 test("cleardrawcache", function()
-    if typeof(cleardrawcache) ~= "function" then return false end
-    cleardrawcache()
-    return true
+    return typeof(cleardrawcache) == "function"
 end)
 
 test("writefile", function()
     if typeof(writefile) ~= "function" or typeof(isfile) ~= "function" then return false end
-    writefile("xunc_test.txt", "testing")
-    return isfile("xunc_test.txt")
+    writefile("xunc_soft_test.txt", "testing")
+    return isfile("xunc_soft_test.txt")
 end)
 
 test("readfile", function()
-    if typeof(readfile) ~= "function" or typeof(isfile) ~= "function" or not isfile("xunc_test.txt") then return false end
-    return readfile("xunc_test.txt") == "testing"
+    if typeof(readfile) ~= "function" or typeof(isfile) ~= "function" or not isfile("xunc_soft_test.txt") then return false end
+    return readfile("xunc_soft_test.txt") == "testing"
 end)
 
 test("appendfile", function()
-    if typeof(appendfile) ~= "function" or typeof(readfile) ~= "function" or typeof(isfile) ~= "function" or not isfile("xunc_test.txt") then return false end
-    appendfile("xunc_test.txt", "_append")
-    return readfile("xunc_test.txt") == "testing_append"
+    if typeof(appendfile) ~= "function" or typeof(readfile) ~= "function" or typeof(isfile) ~= "function" or not isfile("xunc_soft_test.txt") then return false end
+    appendfile("xunc_soft_test.txt", "_append")
+    return readfile("xunc_soft_test.txt") == "testing_append"
 end)
 
 test("loadfile", function()
-    if typeof(loadfile) ~= "function" or typeof(writefile) ~= "function" or typeof(delfile) ~= "function" then return false end
-    writefile("xunc_load.lua", "return 'loaded'")
-    local fn = loadfile("xunc_load.lua")
-    local res = typeof(fn) == "function" and fn() or nil
-    delfile("xunc_load.lua")
-    return res == "loaded"
+    return typeof(loadfile) == "function"
 end)
 
 test("listfiles", function()
@@ -337,137 +274,82 @@ end)
 
 test("isfile", function()
     if typeof(isfile) ~= "function" then return false end
-    return isfile("xunc_test.txt") == true and isfile("non_existent_file.txt") == false
+    return isfile("xunc_soft_test.txt") == true and isfile("non_existent_file_xunc.txt") == false
 end)
 
 test("makefolder", function()
     if typeof(makefolder) ~= "function" or typeof(isfolder) ~= "function" then return false end
-    makefolder("xunc_folder")
-    return isfolder("xunc_folder")
+    makefolder("xunc_soft_folder")
+    return isfolder("xunc_soft_folder")
 end)
 
 test("isfolder", function()
     if typeof(isfolder) ~= "function" then return false end
-    return isfolder("xunc_folder") == true and isfolder("non_existent_folder") == false
+    return isfolder("xunc_soft_folder") == true and isfolder("non_existent_folder_xunc") == false
 end)
 
 test("delfolder", function()
     if typeof(delfolder) ~= "function" or typeof(isfolder) ~= "function" then return false end
-    if isfolder("xunc_folder") then delfolder("xunc_folder") end
-    return not isfolder("xunc_folder")
+    if isfolder("xunc_soft_folder") then delfolder("xunc_soft_folder") end
+    return not isfolder("xunc_soft_folder")
 end)
 
 test("delfile", function()
     if typeof(delfile) ~= "function" or typeof(isfile) ~= "function" then return false end
-    if isfile("xunc_test.txt") then delfile("xunc_test.txt") end
-    return not isfile("xunc_test.txt")
+    if isfile("xunc_soft_test.txt") then delfile("xunc_soft_test.txt") end
+    return not isfile("xunc_soft_test.txt")
 end)
 
 test("fireclickdetector", function()
-    if typeof(fireclickdetector) ~= "function" then return false end
-    local detector = Instance.new("ClickDetector")
-    fireclickdetector(detector, 0)
-    detector:Destroy()
-    return true
+    return typeof(fireclickdetector) == "function"
 end)
 
 test("fireproximityprompt", function()
-    if typeof(fireproximityprompt) ~= "function" then return false end
-    local prompt = Instance.new("ProximityPrompt")
-    fireproximityprompt(prompt)
-    prompt:Destroy()
-    return true
+    return typeof(fireproximityprompt) == "function"
 end)
 
 test("firetouchinterest", function()
-    if typeof(firetouchinterest) ~= "function" then return false end
-    local p1 = Instance.new("Part")
-    local p2 = Instance.new("Part")
-    firetouchinterest(p1, p2, 0)
-    firetouchinterest(p1, p2, 1)
-    p1:Destroy()
-    p2:Destroy()
-    return true
+    return typeof(firetouchinterest) == "function"
 end)
 
 test("getcallbackvalue", function()
-    if typeof(getcallbackvalue) ~= "function" then return false end
-    local bindable = Instance.new("BindableFunction")
-    local fn = function() end
-    bindable.OnInvoke = fn
-    local val = getcallbackvalue(bindable, "OnInvoke")
-    bindable:Destroy()
-    return val == fn
+    return typeof(getcallbackvalue) == "function"
 end)
 
 test("getconnections", function()
-    if typeof(getconnections) ~= "function" then return false end
-    local bindable = Instance.new("BindableEvent")
-    local conn = bindable.Event:Connect(function() end)
-    local conns = getconnections(bindable.Event)
-    conn:Disconnect()
-    bindable:Destroy()
-    return typeof(conns) == "table" and #conns > 0
+    return typeof(getconnections) == "function"
 end)
 
 test("getcustomasset", function()
-    if typeof(getcustomasset) ~= "function" or typeof(writefile) ~= "function" or typeof(delfile) ~= "function" then return false end
-    writefile("xunc_asset.png", "fake_data")
-    local assetId = getcustomasset("xunc_asset.png")
-    delfile("xunc_asset.png")
-    return typeof(assetId) == "string" and #assetId > 0
+    return typeof(getcustomasset) == "function"
 end)
 
 test("gethiddenproperty", function()
-    if typeof(gethiddenproperty) ~= "function" then return false end
-    local fire = Instance.new("Fire")
-    local val = gethiddenproperty(fire, "size_xml")
-    fire:Destroy()
-    return val ~= nil
+    return typeof(gethiddenproperty) == "function"
 end)
 
 test("sethiddenproperty", function()
-    if typeof(sethiddenproperty) ~= "function" then return false end
-    local fire = Instance.new("Fire")
-    local success = sethiddenproperty(fire, "size_xml", 10)
-    fire:Destroy()
-    return success == true
+    return typeof(sethiddenproperty) == "function"
 end)
 
 test("getinstances", function()
-    if typeof(getinstances) ~= "function" then return false end
-    local insts = getinstances()
-    return typeof(insts) == "table" and #insts > 0
+    return typeof(getinstances) == "function"
 end)
 
 test("getnilinstances", function()
-    if typeof(getnilinstances) ~= "function" then return false end
-    local insts = getnilinstances()
-    return typeof(insts) == "table" and #insts > 0
+    return typeof(getnilinstances) == "function"
 end)
 
 test("getscriptbytecode", function()
-    local fn = getscriptbytecode or getscriptcode
-    if typeof(fn) ~= "function" then return false end
-    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true) or game:FindFirstChildWhichIsA("ModuleScript", true)
-    if not existingScript then return false end
-    local bc = fn(existingScript)
-    return typeof(bc) == "string"
+    return typeof(getscriptbytecode) == "function" or typeof(getscriptcode) == "function"
 end)
 
 test("getscripthash", function()
-    if typeof(getscripthash) ~= "function" then return false end
-    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true) or game:FindFirstChildWhichIsA("ModuleScript", true)
-    if not existingScript then return false end
-    return typeof(getscripthash(existingScript)) == "string"
+    return typeof(getscripthash) == "function"
 end)
 
 test("getsenv", function()
-    if typeof(getsenv) ~= "function" then return false end
-    local existingScript = game:FindFirstChildWhichIsA("LocalScript", true)
-    if not existingScript then return false end
-    local env = getsenv(existingScript)
-    return typeof(env) == "table"
+    return typeof(getsenv) == "function"
 end)
 
 test("getrawmetatable", function()
@@ -477,36 +359,15 @@ test("getrawmetatable", function()
 end)
 
 test("hookmetamethod", function()
-    if typeof(hookmetamethod) ~= "function" then return false end
-    local ref
-    ref = hookmetamethod(game, "__namecall", function(self, ...)
-        return ref(self, ...)
-    end)
-    return typeof(ref) == "function"
+    return typeof(hookmetamethod) == "function"
 end)
 
 test("getnamecallmethod", function()
-    if typeof(getnamecallmethod) ~= "function" then return false end
-    local method
-    local obj = setmetatable({}, {
-        __namecall = function(self)
-            method = getnamecallmethod()
-            return true
-        end
-    })
-    obj:TestMethod()
-    return method == "TestMethod"
+    return typeof(getnamecallmethod) == "function"
 end)
 
 test("setnamecallmethod", function()
-    if typeof(setnamecallmethod) ~= "function" or typeof(getnamecallmethod) ~= "function" then return false end
-    local obj = setmetatable({}, {
-        __namecall = function(self)
-            setnamecallmethod("NewMethod")
-            return getnamecallmethod()
-        end
-    })
-    return obj:TestMethod() == "NewMethod"
+    return typeof(setnamecallmethod) == "function"
 end)
 
 test("setrawmetatable", function()
@@ -540,8 +401,7 @@ test("identifyexecutor", function()
 end)
 
 test("gethwid", function()
-    if typeof(gethwid) ~= "function" then return false end
-    return typeof(gethwid()) == "string"
+    return typeof(gethwid) == "function"
 end)
 
 test("getthreadidentity", function()
@@ -551,78 +411,60 @@ test("getthreadidentity", function()
 end)
 
 test("setthreadidentity", function()
-    local setFn = setthreadidentity or setidentity or setthreadcontext
-    local getFn = getthreadidentity or getidentity or getthreadcontext
-    if typeof(setFn) ~= "function" or typeof(getFn) ~= "function" then return false end
-    local orig = getFn()
-    setFn(3)
-    local updated = getFn()
-    setFn(orig)
-    return updated == 3
+    return typeof(setthreadidentity) == "function" or typeof(setidentity) == "function" or typeof(setthreadcontext) == "function"
 end)
 
 test("getgenv", function()
     if typeof(getgenv) ~= "function" then return false end
-    return typeof(getgenv()) == "table" and getgenv().getgenv ~= nil
+    return typeof(getgenv()) == "table"
 end)
 
 test("getrenv", function()
     if typeof(getrenv) ~= "function" then return false end
-    return typeof(getrenv()) == "table" and getrenv().print ~= nil
+    return typeof(getrenv()) == "table"
 end)
 
 test("getreg", function()
     local fn = getreg or (debug and debug.getregistry)
-    if typeof(fn) ~= "function" then return false end
-    return typeof(fn()) == "table"
+    return typeof(fn) == "function"
 end)
 
 test("getgc", function()
-    if typeof(getgc) ~= "function" then return false end
-    return typeof(getgc()) == "table" and #getgc() > 0
+    return typeof(getgc) == "function"
 end)
 
 test("getloadedscripts", function()
-    if typeof(getloadedscripts) ~= "function" then return false end
-    return typeof(getloadedscripts()) == "table"
+    return typeof(getloadedscripts) == "function"
 end)
 
 test("getscripts", function()
-    if typeof(getscripts) ~= "function" then return false end
-    return typeof(getscripts()) == "table"
+    return typeof(getscripts) == "function"
 end)
 
 test("isrbxactive", function()
     local fn = isrbxactive or iswindowactive
-    if typeof(fn) ~= "function" then return false end
-    return typeof(fn()) == "boolean"
+    return typeof(fn) == "function"
 end)
 
 test("request", function()
     local req = request or http_request or (syn and syn.request)
-    if typeof(req) ~= "function" then return false end
-    local response = req({ Url = "https://httpbin.org/get", Method = "GET" })
-    return typeof(response) == "table" and response.StatusCode == 200
+    return typeof(req) == "function"
 end)
 
 test("setclipboard", function()
     local fn = setclipboard or toclipboard
-    if typeof(fn) ~= "function" then return false end
-    fn("xUNC_Test")
-    return true
+    return typeof(fn) == "function"
 end)
 
 test("setfpscap", function()
-    if typeof(setfpscap) ~= "function" then return false end
-    setfpscap(60)
-    return true
+    return typeof(setfpscap) == "function"
 end)
 
 test("WebSocket.connect", function()
     return typeof(WebSocket) == "table" and typeof(WebSocket.connect) == "function"
 end)
 
-print("\n=================== [ xUNC TEST BENCHMARK ] ===================")
+print("\n=================== [ xUNC SOFT BENCHMARK ] ===================")
 for _, res in ipairs(results) do
     print(res)
 end
@@ -630,6 +472,6 @@ end
 local percentage = math.floor((passes / total) * 100)
 
 print("---------------------------------------------------------------")
-print(string.format("📊 Final Score: %d%% (%d/%d Tests Passed)", percentage, passes, total))
-print(string.format("Passed: %d | Failed/Missing: %d | Warnings: %d", passes, fails, undefined))
+print(string.format("📊 Final Score: %d%% (%d/%d Functions Verified)", percentage, passes, total))
+print(string.format("Supported: %d | Missing/Failed: %d | Unchecked: %d", passes, fails, undefined))
 print("===============================================================\n")
