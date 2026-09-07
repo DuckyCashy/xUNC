@@ -14,17 +14,17 @@ local function test(name, callback)
     if success then
         if result == true then
             passes = passes + 1
-            table.insert(results, "🟢 " .. name)
+            table.insert(results, "✅ " .. name)
         elseif result == false then
             fails = fails + 1
-            table.insert(results, "🔴 " .. name)
+            table.insert(results, "❌ " .. name)
         else
             undefined = undefined + 1
-            table.insert(results, "🟡 " .. name)
+            table.insert(results, "❓ " .. name)
         end
     else
         fails = fails + 1
-        table.insert(results, "🔴 " .. name)
+        table.insert(results, "❌ " .. name)
     end
 end
 
@@ -473,5 +473,5 @@ local percentage = math.floor((passes / total) * 100)
 
 print("---------------------------------------------------------------")
 print(string.format("📊 Final Score: %d%% (%d/%d Functions Verified)", percentage, passes, total))
-print(string.format("Supported: %d | Missing/Failed: %d | Unchecked: %d", passes, fails, undefined))
+print(string.format("Passed: %d | Failed: %d | Unknown: %d", passes, fails, undefined))
 print("===============================================================\n")
