@@ -5,9 +5,9 @@ xUNC is an anti-spoof behavioral environment testing suite for Roblox script exe
 
 ---
 
-## 🚀 Quick Start Execution
+## Quick Start Execution
 
 Run xUNC directly in your executor environment:
 
 ```lua
-loadstring(game:HttpGet("[https://raw.githubusercontent.com/YourUsername/xUNC/main/build/init.lua](https://raw.githubusercontent.com/YourUsername/xUNC/main/build/init.lua)"))()
+loadstring(game:HttpGet("[https://raw.githubusercontent.com/vxUNC/xUNC/main/build/init.lua](https://raw.githubusercontent.com/vxUNC/xUNC/main/build/init.lua)"))()
