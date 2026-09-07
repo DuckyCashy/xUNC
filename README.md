@@ -16,6 +16,11 @@ xUNC is an anti-spoof behavioral environment testing suite for Roblox script exe
   <img src="images/Screenshot_20260907_113940_Roblox.png" alt="xUNC Execution Preview" width="100%" />
 </p>
 
+**Solara 3.0**
+<p align="center">
+  <img src="images/Screenshot_20260907_113940_Roblox.png" alt="xUNC Execution Preview" width="100%" />
+</p>
+
 ---
 ## How to use
 
