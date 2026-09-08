@@ -8,32 +8,42 @@ function SecurityEngine.new()
 end
 
 function SecurityEngine:ValidateCClosure(func)
-    if type(func) ~= "function" then
-        return false, "Target is not a function"
+    if typeof(func) ~= "function" then
+        return false
     end
 
     local isC = false
-    if iscclosure then
+    if typeof(iscclosure) == "function" then
         isC = iscclosure(func)
-    else
-        isC = debug.info(func, "s") == "[C]"
+    elseif typeof(debug) == "table" and typeof(debug.getinfo) == "function" then
+        local info = debug.getinfo(func)
+        isC = typeof(info) == "table" and info.what == "C"
     end
 
-    local success, name = pcall(debug.info, func, "n")
+    local success = pcall(function()
+        if typeof(debug) == "table" and typeof(debug.getinfo) == "function" then
+            return debug.getinfo(func, "n")
+        end
+    end)
+    
     if not success then
-        return false, "Closure info spoof detected"
+        return false
     end
 
     return isC
 end
 
 function SecurityEngine:VerifyCallStack()
+    if typeof(debug) ~= "table" or typeof(debug.getinfo) ~= "function" then
+        return false
+    end
+
     local level = 1
     local frames = {}
 
     while true do
-        local info = debug.info(level, "s1n")
-        if not info then break end
+        local success, info = pcall(debug.getinfo, level, "s1n")
+        if not success or not info then break end
         
         table.insert(frames, {
             Level = level,
@@ -43,7 +53,7 @@ function SecurityEngine:VerifyCallStack()
         if level > 50 then break end
     end
 
-    return #frames > 0, frames
+    return #frames > 0
 end
 
 function SecurityEngine:HashString(str)
@@ -55,23 +65,17 @@ function SecurityEngine:HashString(str)
     return tostring(hash)
 end
 
-function SecurityEngine:SignResults(executorName, passedTests, totalTests)
-    local rawPayload = string.format("%s:%d/%d:%s", executorName, passedTests, totalTests, self.SecretKey)
+function SecurityEngine:SignResults(executorName, passes, total)
+    local rawPayload = string.format("%s:%d/%d:%s", executorName, passes, total, self.SecretKey)
     local signature = nil
 
-    if crypt and crypt.hash then
+    if typeof(crypt) == "table" and typeof(crypt.hash) == "function" then
         signature = crypt.hash(rawPayload, "sha256")
     else
         signature = self:HashString(rawPayload)
     end
 
-    return {
-        Executor = executorName,
-        Passed = passedTests,
-        Total = totalTests,
-        Signature = signature,
-        Verified = true
-    }
+    return signature
 end
 
 return SecurityEngine
