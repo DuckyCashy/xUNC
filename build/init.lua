@@ -5,6 +5,9 @@ local total = 0
 
 local results = {}
 
+local SecurityEngine = loadstring(game:HttpGet("https://raw.githubusercontent.com/YourUsername/xUNC/main/security.lua"))()
+local Security = SecurityEngine.new()
+
 local function test(name, callback)
     total = total + 1
     task.wait(0.02)
@@ -40,6 +43,19 @@ local function getExecutor()
 end
 
 print("⚡ [xUNC] Executing soft benchmark suite...")
+
+test("security.ValidateCClosure", function()
+    return Security:ValidateCClosure(print) == true and Security:ValidateCClosure(function() end) == false
+end)
+
+test("security.VerifyCallStack", function()
+    return Security:VerifyCallStack() == true
+end)
+
+test("security.SignResults", function()
+    local sig = Security:SignResults("Test", 1, 1)
+    return typeof(sig) == "string" and #sig > 0
+end)
 
 test("cache.invalidate", function()
     return typeof(cache) == "table" and typeof(cache.invalidate) == "function"
@@ -481,9 +497,11 @@ for _, res in ipairs(results) do
 end
 
 local percentage = math.floor((passes / total) * 100)
+local signature = Security:SignResults(getExecutor(), passes, total)
 
 print("---------------------------------------------------------------")
 print(string.format("📊 Final Score: %d%% (%d/%d Functions Verified)", percentage, passes, total))
 print(string.format("Passed: %d | Failed: %d | Unknown: %d", passes, fails, undefined))
 print(string.format("💻 Executor: %s", getExecutor()))
+print(string.format("🛡️ Security Signature: %s", signature))
 print("===============================================================\n")
